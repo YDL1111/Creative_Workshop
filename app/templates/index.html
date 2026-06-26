@@ -39,6 +39,7 @@
     }
 
     button, select, textarea { font: inherit; }
+    input { font: inherit; }
 
     .app {
       width: 100vw;
@@ -121,6 +122,19 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
+    .config-chip {
+      height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,250,241,.62);
+      color: var(--coal);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .config-chip:hover { border-color: rgba(18,23,20,.34); background: rgba(255,250,241,.9); }
 
     .board {
       min-height: 0;
@@ -567,10 +581,148 @@
       will-change: transform;
     }
 
+    .config-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(18, 23, 20, .48);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    .config-modal.is-open { display: grid; }
+
+    .config-shell {
+      width: min(860px, 96vw);
+      max-height: min(720px, 92vh);
+      display: grid;
+      grid-template-rows: 48px minmax(0, 1fr) 52px;
+      border: 1px solid rgba(255,250,241,.2);
+      border-radius: 8px;
+      background: rgba(248, 241, 227, .97);
+      box-shadow: 0 28px 80px rgba(18, 23, 20, .32);
+      overflow: hidden;
+    }
+
+    .config-head, .config-foot {
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(255,250,241,.52);
+      border-bottom: 1px solid var(--soft-line);
+    }
+
+    .config-foot {
+      border-top: 1px solid var(--soft-line);
+      border-bottom: 0;
+      justify-content: flex-end;
+    }
+
+    .config-title { margin: 0; font-size: 16px; }
+    .config-status { color: var(--muted); font-size: 12px; }
+
+    .config-body {
+      min-height: 0;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .config-group {
+      min-width: 0;
+      min-height: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255,250,241,.54);
+      display: grid;
+      grid-template-rows: 28px repeat(4, minmax(56px, auto));
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .config-group h3 {
+      margin: 0;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .config-field { min-width: 0; }
+
+    .config-field label {
+      margin-bottom: 4px;
+      font-size: 10px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .config-input, .config-select {
+      width: 100%;
+      height: 34px;
+      padding: 0 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255,250,241,.92);
+      color: var(--ink);
+      outline: none;
+      font-size: 12px;
+    }
+
+    .key-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 84px;
+      gap: 7px;
+    }
+
+    .key-hint {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .config-close {
+      height: 30px;
+      min-width: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,250,241,.62);
+      color: var(--coal);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .config-save {
+      height: 34px;
+      min-width: 110px;
+      padding: 0 14px;
+      border: 1px solid var(--coal);
+      border-radius: 7px;
+      background: var(--coal);
+      color: #fffaf1;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .config-save:disabled { opacity: .62; cursor: wait; }
+
     @media (max-width: 1280px) {
       .mast { grid-template-columns: minmax(300px, 1fr) 160px 160px; }
       .board { grid-template-columns: minmax(280px, 30%) 8px minmax(380px, 45%) 8px minmax(240px, 25%); gap: 7px; }
       .prompt-text { font-size: 12px; }
+      .config-body { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 980px) {
@@ -608,11 +760,11 @@
       </section>
       <section class="meter">
         <div class="label">Provider</div>
-        <div class="value">{{ provider }}</div>
+        <div class="value" id="provider-value">{{ provider }}</div>
       </section>
       <section class="quick-note">
         <div class="label">Mode</div>
-        <div class="value">Resizable Bench</div>
+        <button class="config-chip" type="button" id="config-open">API 配置</button>
       </section>
     </header>
 
@@ -684,6 +836,70 @@
       </aside>
     </section>
   </main>
+  <div class="config-modal" id="config-modal" aria-hidden="true">
+    <form class="config-shell" id="config-form">
+      <div class="config-head">
+        <h2 class="config-title">API 配置</h2>
+        <button class="config-close" type="button" id="config-close">关闭</button>
+      </div>
+      <div class="config-body">
+        <section class="config-group">
+          <h3>生图 API</h3>
+          <div class="config-field">
+            <label for="cfg-image-provider">Provider</label>
+            <select class="config-select" id="cfg-image-provider">
+              <option value="mock">mock</option>
+              <option value="openai_compatible">openai_compatible</option>
+            </select>
+          </div>
+          <div class="config-field">
+            <label for="cfg-image-base">Base URL</label>
+            <input class="config-input" id="cfg-image-base" type="url" placeholder="https://api.unity2.ai/v1">
+          </div>
+          <div class="config-field">
+            <label for="cfg-image-model">Model</label>
+            <input class="config-input" id="cfg-image-model" type="text" placeholder="gpt-image-2">
+          </div>
+          <div class="config-field">
+            <label for="cfg-image-key">API Key</label>
+            <div class="key-row">
+              <input class="config-input" id="cfg-image-key" type="password" autocomplete="new-password" placeholder="留空则保留当前 Key">
+              <button class="config-close" type="button" data-toggle-key="cfg-image-key">显示</button>
+            </div>
+            <div class="key-hint" id="cfg-image-key-hint">未读取</div>
+          </div>
+        </section>
+
+        <section class="config-group">
+          <h3>提示词优化 LLM</h3>
+          <div class="config-field">
+            <label for="cfg-llm-base">Base URL</label>
+            <input class="config-input" id="cfg-llm-base" type="url" placeholder="https://api.example.com/v1">
+          </div>
+          <div class="config-field">
+            <label for="cfg-llm-model">Model</label>
+            <input class="config-input" id="cfg-llm-model" type="text" placeholder="deepseek-chat">
+          </div>
+          <div class="config-field">
+            <label for="cfg-llm-key">API Key</label>
+            <div class="key-row">
+              <input class="config-input" id="cfg-llm-key" type="password" autocomplete="new-password" placeholder="留空则保留当前 Key">
+              <button class="config-close" type="button" data-toggle-key="cfg-llm-key">显示</button>
+            </div>
+            <div class="key-hint" id="cfg-llm-key-hint">未读取</div>
+          </div>
+          <div class="config-field">
+            <label>保存位置</label>
+            <div class="key-hint">保存到项目 .env；Docker 模式已挂载同一份 .env。</div>
+          </div>
+        </section>
+      </div>
+      <div class="config-foot">
+        <span class="config-status" id="config-status">Key 不会明文回显，留空即可保留原值。</span>
+        <button class="config-save" type="submit" id="config-save">保存配置</button>
+      </div>
+    </form>
+  </div>
   <div class="image-viewer" id="image-viewer" aria-hidden="true">
     <div class="viewer-bar">
       <div class="viewer-title">滚轮缩放，拖动平移，双击复位，Esc 关闭</div>
@@ -724,6 +940,22 @@
     const historyMeter = document.querySelector('#history-meter');
     const board = document.querySelector('#bench-board');
     const splitters = Array.from(document.querySelectorAll('.splitter'));
+    const providerValue = document.querySelector('#provider-value');
+    const configOpen = document.querySelector('#config-open');
+    const configModal = document.querySelector('#config-modal');
+    const configForm = document.querySelector('#config-form');
+    const configClose = document.querySelector('#config-close');
+    const configSave = document.querySelector('#config-save');
+    const configStatus = document.querySelector('#config-status');
+    const cfgImageProvider = document.querySelector('#cfg-image-provider');
+    const cfgImageBase = document.querySelector('#cfg-image-base');
+    const cfgImageModel = document.querySelector('#cfg-image-model');
+    const cfgImageKey = document.querySelector('#cfg-image-key');
+    const cfgImageKeyHint = document.querySelector('#cfg-image-key-hint');
+    const cfgLlmBase = document.querySelector('#cfg-llm-base');
+    const cfgLlmModel = document.querySelector('#cfg-llm-model');
+    const cfgLlmKey = document.querySelector('#cfg-llm-key');
+    const cfgLlmKeyHint = document.querySelector('#cfg-llm-key-hint');
     const historyPageSize = 3;
     let historyPage = 0;
     let saveTimer = null;
@@ -899,6 +1131,7 @@
 
     window.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && imageViewer.classList.contains('is-open')) closeViewer();
+      if (event.key === 'Escape' && configModal.classList.contains('is-open')) closeConfigModal();
     });
 
     function syncStageRatio() {
@@ -978,6 +1211,80 @@
       if (!response.ok) throw new Error(data.detail || '请求失败');
       return data;
     }
+
+    function applyConfigFields(data) {
+      cfgImageProvider.value = data.image_provider || 'mock';
+      cfgImageBase.value = data.image_api_base_url || '';
+      cfgImageModel.value = data.image_model || '';
+      cfgImageKey.value = '';
+      cfgLlmBase.value = data.llm_api_base_url || '';
+      cfgLlmModel.value = data.llm_model || '';
+      cfgLlmKey.value = '';
+      cfgImageKeyHint.textContent = data.image_api_key_set ? '当前 Key：' + data.image_api_key_hint : '当前未配置 Key';
+      cfgLlmKeyHint.textContent = data.llm_api_key_set ? '当前 Key：' + data.llm_api_key_hint : '当前未配置 Key';
+      if (providerValue) providerValue.textContent = data.image_provider || 'mock';
+    }
+
+    async function loadRuntimeConfig() {
+      configStatus.textContent = '读取中...';
+      const data = await getJson('/api/config');
+      applyConfigFields(data);
+      configStatus.textContent = 'Key 不会明文回显，留空即可保留原值。';
+    }
+
+    async function openConfigModal() {
+      configModal.classList.add('is-open');
+      configModal.setAttribute('aria-hidden', 'false');
+      try {
+        await loadRuntimeConfig();
+      } catch (err) {
+        configStatus.textContent = err.message;
+      }
+    }
+
+    function closeConfigModal() {
+      configModal.classList.remove('is-open');
+      configModal.setAttribute('aria-hidden', 'true');
+    }
+
+    configOpen?.addEventListener('click', openConfigModal);
+    configClose?.addEventListener('click', closeConfigModal);
+    configModal?.addEventListener('click', (event) => {
+      if (event.target === configModal) closeConfigModal();
+    });
+
+    document.querySelectorAll('[data-toggle-key]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const input = document.querySelector('#' + button.dataset.toggleKey);
+        if (!input) return;
+        input.type = input.type === 'password' ? 'text' : 'password';
+        button.textContent = input.type === 'password' ? '显示' : '隐藏';
+      });
+    });
+
+    configForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      configSave.disabled = true;
+      configStatus.textContent = '保存中...';
+      try {
+        const data = await postJson('/api/config', {
+          image_provider: cfgImageProvider.value,
+          image_api_base_url: cfgImageBase.value.trim(),
+          image_model: cfgImageModel.value.trim(),
+          image_api_key: cfgImageKey.value.trim(),
+          llm_api_base_url: cfgLlmBase.value.trim(),
+          llm_model: cfgLlmModel.value.trim(),
+          llm_api_key: cfgLlmKey.value.trim()
+        });
+        applyConfigFields(data);
+        configStatus.textContent = '已保存，下一次生图或优化会使用新配置。';
+        promptState.textContent = '配置已更新';
+      } catch (err) {
+        configStatus.textContent = err.message;
+      } finally {
+        configSave.disabled = false;
+      }
+    });
 
     async function loadPromptPreference() {
       clearError();

@@ -20,7 +20,7 @@ class Settings:
 
 
 def get_settings() -> Settings:
-    load_dotenv(override=True)
+    load_dotenv(override=False)
     return Settings(
         app_name=os.getenv("APP_NAME", "Creative Workshop"),
         app_env=os.getenv("APP_ENV", "development"),

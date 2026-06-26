@@ -7,6 +7,7 @@
 - 专题方向与视觉风格选择，内置多组中文 Positive / Negative 默认关键词
 - “生成创意”：根据专题方向和视觉风格调用 LLM 生成中文创意句
 - “优化提示词”：调用 LLM 优化 Positive / Negative 关键词
+- 前端 API 配置面板：可在页面里编辑生图 API 与提示词优化 LLM 配置
 - 支持手动编辑提示词，并按“专题方向 + 视觉风格”持久化到 MySQL
 - 支持重置为默认提示词
 - 调用云端 Images API 生成图片，支持 mock 模式本地占位图
@@ -183,6 +184,8 @@ Docker 持久化数据：
 
 默认 `IMAGE_PROVIDER=mock`，用于不消耗额度地验证完整流程。
 
+也可以在页面右上角点击 `API 配置` 直接编辑生图 API 和 LLM API。Key 不会明文回显，输入框留空保存时会保留当前 Key。
+
 切换到云端 Images API：
 
 ```env
@@ -213,6 +216,8 @@ POST {IMAGE_API_BASE_URL}/images/generations
 ## LLM 配置
 
 “生成创意”和“优化提示词”共用 OpenAI-compatible Chat Completions API：
+
+这些配置同样可以在页面右上角的 `API 配置` 面板中修改。
 
 ```env
 LLM_API_KEY=你的LLM_APIKey

@@ -16,6 +16,7 @@ from app.image_service import ImageGenerationError, generate_image
 from app.llm_service import PromptOptimizeError, generate_idea, optimize_prompt
 from app.models import Generation, PromptPreference
 from app.prompt_service import compose_prompt, get_style_options, get_topic_options
+from app.runtime_config import read_runtime_config, save_runtime_config
 from app.schemas import (
     ComposeRequest,
     ComposeResponse,
@@ -25,6 +26,8 @@ from app.schemas import (
     GenerateResponse,
     OptimizePromptRequest,
     PromptPreferenceRequest,
+    RuntimeConfigResponse,
+    RuntimeConfigUpdate,
 )
 
 settings = get_settings()
@@ -138,6 +141,16 @@ def index(db: Session = Depends(get_db)):
 @app.get("/api/health")
 def health() -> dict[str, str | bool]:
     return {"ok": True, "database": ping_db(), "provider": get_settings().image_provider}
+
+
+@app.get("/api/config", response_model=RuntimeConfigResponse)
+def get_runtime_config():
+    return read_runtime_config()
+
+
+@app.post("/api/config", response_model=RuntimeConfigResponse)
+def update_runtime_config(payload: RuntimeConfigUpdate):
+    return save_runtime_config(payload)
 
 
 @app.get("/api/prompts/preference", response_model=ComposeResponse)
